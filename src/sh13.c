@@ -216,7 +216,7 @@ int main(int argc, char ** argv)
     texture_gobutton = SDL_CreateTextureFromSurface(renderer, gobutton);
     texture_connectbutton = SDL_CreateTextureFromSurface(renderer, connectbutton);
 
-    TTF_Font* Sans = TTF_OpenFont("sans.ttf", 15); 
+    TTF_Font* Sans = TTF_OpenFont("../img/sans.ttf", 15); 
     printf("Sans=%p\n",Sans);
 
    /* Creation du thread serveur tcp. */
@@ -239,7 +239,8 @@ int main(int argc, char ** argv)
 				//printf("mx=%d my=%d\n",mx,my);
 				if ((mx<200) && (my<50) && (connectEnabled==1))
 				{
-					sprintf(sendBuffer,"C %s %d %s",gClientIpAddress,gClientPort,gName);
+					snprintf(sendBuffer, sizeof(sendBuffer), "C %s %d %s", gClientIpAddress, gClientPort, gName);
+
 
 					// RAJOUTER DU CODE ICI
 					sendMessageToServer(gServerIpAddress,gServerPort,sendBuffer);
@@ -409,21 +410,32 @@ int main(int argc, char ** argv)
                 SDL_FreeSurface(surfaceMessage);
         }
 
-        for (i=0;i<13;i++)
-        {
-                SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, nbnoms[i], col1);
-                SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
-
-                SDL_Rect Message_rect;
-                Message_rect.x = 105;
-                Message_rect.y = 350+i*30;
-                Message_rect.w = surfaceMessage->w;
-                Message_rect.h = surfaceMessage->h;
-
-                SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
-                SDL_DestroyTexture(Message);
-                SDL_FreeSurface(surfaceMessage);
-        }
+		for (i = 0; i < 13; i++)
+		{
+			SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, nbnoms[i], col1);
+			if (!surfaceMessage) {
+				fprintf(stderr, "Erreur TTF_RenderText_Solid : %s\n", TTF_GetError());
+				continue; // on saute cette itération pour éviter le crash
+			}
+		
+			SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+			if (!Message) {
+				fprintf(stderr, "Erreur SDL_CreateTextureFromSurface : %s\n", SDL_GetError());
+				SDL_FreeSurface(surfaceMessage);
+				continue;
+			}
+		
+			SDL_Rect Message_rect;
+			Message_rect.x = 105;
+			Message_rect.y = 350 + i * 30;
+			Message_rect.w = surfaceMessage->w;
+			Message_rect.h = surfaceMessage->h;
+		
+			SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
+			SDL_DestroyTexture(Message);
+			SDL_FreeSurface(surfaceMessage);
+		}
+		
 
 	for (i=0;i<4;i++)
         	for (j=0;j<8;j++)
