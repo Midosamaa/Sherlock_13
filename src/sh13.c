@@ -30,7 +30,7 @@ int tableCartes[4][8];
 int b[3];
 int goEnabled;
 int connectEnabled;
-
+char message[256] = "Sherlock 13";
 char *nbobjets[]={"5","5","5","5","4","3","3","3"};
 char *nbnoms[]={"Sebastian Moran", "irene Adler", "inspector Lestrade",
   "inspector Gregson", "inspector Baynes", "inspector Bradstreet",
@@ -274,6 +274,7 @@ int main(int argc, char ** argv)
 					if (guiltSel!=-1)
 					{
 						sprintf(sendBuffer,"G %d %d",gId, guiltSel);
+						sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
 
 					// RAJOUTER DU CODE ICI
 
@@ -281,6 +282,7 @@ int main(int argc, char ** argv)
 					else if ((objetSel!=-1) && (joueurSel==-1))
 					{
 						sprintf(sendBuffer,"O %d %d",gId, objetSel);
+						sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
 
 					// RAJOUTER DU CODE ICI
 
@@ -288,7 +290,7 @@ int main(int argc, char ** argv)
 					else if ((objetSel!=-1) && (joueurSel!=-1))
 					{
 						sprintf(sendBuffer,"S %d %d %d",gId, joueurSel,objetSel);
-
+						sendMessageToServer(gServerIpAddress, gServerPort, sendBuffer);
 					// RAJOUTER DU CODE ICI
 
 					}
@@ -341,7 +343,32 @@ int main(int argc, char ** argv)
 				tableCartes[row][col] = val;
 
 				break;
+			case 'R': {
+				int result;
+				sscanf(gbuffer, "R %d", &result);
+				sprintf(message, "Résultat : %d", result);
+				break;
+			}
+			case 'W': {
+				int winnerId;
+				sscanf(gbuffer, "W %d", &winnerId);
+				sprintf(message, "Le joueur %d a gagné !", winnerId);
+				quit = 1;
+				break;
+			}
+			case 'X': {
+				int loserId;
+				sscanf(gbuffer, "X %d", &loserId);
+				if (loserId == gId) {
+					goEnabled = 0;
+					sprintf(message, "Tu es éliminé !");
+				} else {
+					sprintf(message, "Joueur %d éliminé !", loserId);
+				}
+				break;
+			}
 		}
+
 		synchro=0;
         }
 
@@ -413,24 +440,14 @@ int main(int argc, char ** argv)
 		for (i = 0; i < 13; i++)
 		{
 			SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, nbnoms[i], col1);
-			if (!surfaceMessage) {
-				fprintf(stderr, "Erreur TTF_RenderText_Solid : %s\n", TTF_GetError());
-				continue; // on saute cette itération pour éviter le crash
-			}
-		
 			SDL_Texture* Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
-			if (!Message) {
-				fprintf(stderr, "Erreur SDL_CreateTextureFromSurface : %s\n", SDL_GetError());
-				SDL_FreeSurface(surfaceMessage);
-				continue;
-			}
-		
+
 			SDL_Rect Message_rect;
 			Message_rect.x = 105;
-			Message_rect.y = 350 + i * 30;
+			Message_rect.y = 350+i*30;
 			Message_rect.w = surfaceMessage->w;
 			Message_rect.h = surfaceMessage->h;
-		
+
 			SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
 			SDL_DestroyTexture(Message);
 			SDL_FreeSurface(surfaceMessage);
